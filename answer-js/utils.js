@@ -5,7 +5,7 @@ import { createInterface } from "readline";
 /**
  * return a promise of list of sudoku, 9*9 1d-array
  */
-export const loadSudokuList = async () =>
+export const loadSudokuList = () =>
   new Promise((resolve) => {
     const sudoKuList = [];
     let lineNumber = 0;
@@ -33,7 +33,7 @@ export const loadSudokuList = async () =>
  * @param {*} sudoku 9*9 1d-array
  * @returns string representation of sudoku
  */
-export const toSudokuText = (sudoku) => {
+export const formatSudoku = (sudoku) => {
   return Array.from(Array(3).keys())
     .map((R) => {
       return Array.from(Array(3).keys())

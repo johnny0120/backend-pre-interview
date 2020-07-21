@@ -1,6 +1,7 @@
 {
     "scripts": {
-        "start": "babel-node --presets es2015 answer-js/main.js"
+        "start": "babel-node --presets es2015 answer-js/main.js",
+        "lint": "eslint answer-js/** --fix"
     },
     "dependencies": {
         "lodash": "^4.17.19"
