@@ -1,4 +1,17 @@
-import { forEach, difference, keys, uniq, includes, assign } from "lodash";
+import {
+  forEach,
+  difference,
+  keys,
+  uniq,
+  includes,
+  assign,
+  join,
+  isArray,
+} from "lodash";
+import minimist from "minimist";
+import { formatSudoku } from "./utils";
+
+const args = minimist(process.argv.slice(2));
 
 const UNSOLVABLE = new Error("The Sudoku cannot be solved");
 const RANGE = Array.from(Array(9).keys());
@@ -31,6 +44,15 @@ const checkSudoku = (sudoku = []) => {
  */
 const updateSudokuAndSpace = async (sudoku = [], space = {}) => {
   let updateSudokuAndSpaceDone = false;
+  if (args["c"]) {
+    console.log(
+      `<<< load space:\n${JSON.stringify(
+        space,
+        (k, v) => (isArray(v) ? join(v, ",") : v),
+        4
+      )}`
+    );
+  }
   do {
     forEach(sudoku, (digit, idx) => {
       if (digit === 0) {
@@ -56,6 +78,15 @@ const updateSudokuAndSpace = async (sudoku = [], space = {}) => {
         delete space[idxKey];
       }
     });
+    if (args["c"]) {
+      console.log(
+        `<<< update search space:\n${JSON.stringify(
+          space,
+          (k, v) => (isArray(v) ? join(v, ",") : v),
+          4
+        )}`
+      );
+    }
   } while (!updateSudokuAndSpaceDone);
 };
 
@@ -78,19 +109,31 @@ const solveSudokuBySpace = async (sudoku = [], space = {}) => {
     const choices = space[selectedIdx];
     const spaceOrigin = assign({}, space);
     delete spaceOrigin[selectedIdx];
+    if (args["t"]) {
+      console.log(`index=${selectedIdx}, choices=[ ${join(choices, ", ")} ]`);
+    }
     for (let i = 0; i < choices.length; i++) {
       try {
+        if (args["t"]) {
+          console.log(`index=${selectedIdx}, try=[ ${choices[i]} ]`);
+        }
         const sudokuCopy = [...sudoku];
         const spaceCopy = assign({}, spaceOrigin);
         sudokuCopy[parseInt(selectedIdx)] = choices[i];
         await updateSudokuAndSpace(sudokuCopy, spaceCopy);
         return await solveSudokuBySpace(sudokuCopy, spaceCopy);
       } catch (error) {
+        if (args["t"]) {
+          console.error(`index=${selectedIdx}, error=[ ${choices[i]} ]`);
+        }
         continue;
       }
     }
     throw UNSOLVABLE;
   } else if (checkSudoku(sudoku)) {
+    if (args["t"]) {
+      console.log(`<<< finish searching with:\n${formatSudoku(sudoku)}\n`);
+    }
     return sudoku;
   } else {
     throw UNSOLVABLE;
@@ -100,11 +143,17 @@ const solveSudokuBySpace = async (sudoku = [], space = {}) => {
 /**
  * solve sudoku asynchronously and replace all the 0s
  * @param {*} sudoku 9*9
- * @returns Solved sudoku or throws error
+ * @returns Solved sudoku or throws UNSOLVABLE error
  */
-export const solveSudoku = async (sudoku = []) => {
+export const solveSudoku = async (sudoku) => {
+  if (!sudoku) {
+    return sudoku;
+  }
   const sudokuCopy = [...sudoku];
   const searchSpace = {};
   await updateSudokuAndSpace(sudokuCopy, searchSpace);
+  if (args["t"]) {
+    console.log(`>>> start searching from:\n${formatSudoku(sudokuCopy)}\n`);
+  }
   return await solveSudokuBySpace(sudokuCopy, searchSpace);
 };
