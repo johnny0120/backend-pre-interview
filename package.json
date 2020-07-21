@@ -1,6 +1,17 @@
 {
+    "scripts": {
+        "start": "babel-node --presets es2015 answer-js/main.js"
+    },
+    "dependencies": {
+        "lodash": "^4.17.19"
+    },
     "devDependencies": {
-        "eslint": "^7.0.0"
+        "babel-cli": "^6.26.0",
+        "babel-preset-es2015": "^6.24.1",
+        "eslint": "^7.0.0",
+        "eslint-config-prettier": "^6.11.0",
+        "eslint-plugin-prettier": "^3.1.4",
+        "prettier": "^2.0.5"
     },
     "name": "backend-pre-interview",
     "version": "1.0.0",
@@ -18,7 +29,7 @@
         },
         "extends": [
             "eslint:recommended",
-            "plugins:prettier/recommended"
+            "plugin:prettier/recommended"
         ],
         "parserOptions": {
             "sourceType": "module"
