@@ -7,6 +7,8 @@ import {
   assign,
   join,
   isArray,
+  maxBy,
+  floor,
 } from "lodash";
 import minimist from "minimist";
 import { formatSudoku } from "./utils";
@@ -24,11 +26,11 @@ const DIGITS = RANGE.map((i) => i + 1);
  */
 const checkSudoku = (sudoku = []) => {
   for (let idx = 0; idx < 9; idx++) {
-    const grd = Math.floor(idx / 3) * 27 + (idx % 3) * 3;
+    const grd = floor(idx / 3) * 27 + (idx % 3) * 3;
     if (
       uniq(RANGE.map((i) => sudoku[idx * 9 + i])).length !== 9 ||
       uniq(RANGE.map((i) => sudoku[idx + i * 9])).length !== 9 ||
-      uniq(RANGE.map((i) => sudoku[grd + Math.floor(i / 3) * 9 + (i % 3)]))
+      uniq(RANGE.map((i) => sudoku[grd + floor(i / 3) * 9 + (i % 3)]))
         .length !== 9
     ) {
       return false;
@@ -57,13 +59,13 @@ const updateSudokuAndSpace = async (sudoku = [], space = {}) => {
     forEach(sudoku, (digit, idx) => {
       if (digit === 0) {
         const col = idx % 9;
-        const row = Math.floor(idx / 9);
-        const grd = Math.floor(row / 3) * 27 + Math.floor(col / 3) * 3;
+        const row = floor(idx / 9);
+        const grd = floor(row / 3) * 27 + floor(col / 3) * 3;
         space[`${idx}`] = difference(
           space[`${idx}`] || DIGITS,
           RANGE.map((i) => sudoku[row * 9 + i]),
           RANGE.map((i) => sudoku[col + i * 9]),
-          RANGE.map((i) => sudoku[grd + Math.floor(i / 3) * 9 + (i % 3)])
+          RANGE.map((i) => sudoku[grd + floor(i / 3) * 9 + (i % 3)])
         );
         if (space[`${idx}`].length === 0) {
           throw UNSOLVABLE;
@@ -91,6 +93,25 @@ const updateSudokuAndSpace = async (sudoku = [], space = {}) => {
 };
 
 /**
+ * pick index that will quickly trim search space
+ * @param {*} space search space
+ * @returns index key of search space
+ */
+const pickIndexFromSpace = (space = {}) => {
+  const choiceMap = RANGE.map(() => []);
+  forEach(space, (choices, i) =>
+    choiceMap[choices.length - 1].push(parseInt(i))
+  );
+  const idxWithLeastChoices = choiceMap.find((i) => i.length > 0);
+  const gridMap = RANGE.map(() => []);
+  forEach(idxWithLeastChoices, (i) =>
+    gridMap[floor(floor(i / 9) / 3) * 3 + floor((i % 9) / 3)].push(i)
+  );
+  const idxWithLeastChoicesAndMostNeighbors = maxBy(gridMap, (i) => i.length);
+  return idxWithLeastChoicesAndMostNeighbors[0];
+};
+
+/**
  * recursively search for solution in the search space
  * @param {*} sudoku 9*9 1d array
  * @param {*} space search space
@@ -98,14 +119,7 @@ const updateSudokuAndSpace = async (sudoku = [], space = {}) => {
  */
 const solveSudokuBySpace = async (sudoku = [], space = {}) => {
   if (keys(space).length !== 0) {
-    let selectedIdx = "";
-    let minimalChoicesLength = Infinity;
-    forEach(space, (choices, idxKey) => {
-      if (choices.length < minimalChoicesLength) {
-        minimalChoicesLength = choices.length;
-        selectedIdx = idxKey;
-      }
-    });
+    const selectedIdx = pickIndexFromSpace(space);
     const choices = space[selectedIdx];
     const spaceOrigin = assign({}, space);
     delete spaceOrigin[selectedIdx];
