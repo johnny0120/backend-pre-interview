@@ -5,12 +5,12 @@ import { createInterface } from "readline";
 /**
  * return a promise of list of sudoku, 9*9 1d-array
  */
-export const loadSudokuList = () =>
+export const loadSudokuList = (relativePath = "sudoku.txt") =>
   new Promise((resolve) => {
     const sudoKuList = [];
     let lineNumber = 0;
     const file = createInterface({
-      input: createReadStream(pathResolve(__dirname, "../sudoku.txt")),
+      input: createReadStream(pathResolve(__dirname, "..", relativePath)),
       output: process.stdout,
       terminal: false,
     });

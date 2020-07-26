@@ -7,6 +7,7 @@ const args = minimist(process.argv.slice(2));
 
 if (args["help"] || args["h"]) {
   console.log("Additional options:");
+  console.log("--input \t specify input file; --input=sudoku.txt");
   console.log("-g \t run the program with selected grid-id; -g=1,2,3");
   console.log("-s \t show solution in the end;");
   console.log("-t \t show search steps;");
@@ -14,7 +15,7 @@ if (args["help"] || args["h"]) {
   process.exit(0);
 }
 
-loadSudokuList()
+loadSudokuList(args["input"] || "sudoku.txt")
   .then((sudokuList) =>
     map(sudokuList, (s, i) =>
       !args["g"] || i + 1 === args["g"] || includes(args["g"], i + 1) ? s : null
